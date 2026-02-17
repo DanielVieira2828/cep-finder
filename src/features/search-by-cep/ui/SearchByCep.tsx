@@ -63,7 +63,7 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
                         type="text"
                         value={cep}
                         onChange={handleCepChange}
-                        placeholder="06396-020"
+                        placeholder="00000-000"
                         maxLength={9}
                         className="w-full pl-12 pr-4 py-3.5 bg-gray-900 border border-gray-800 rounded-xl text-white 
                                    focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/20 
