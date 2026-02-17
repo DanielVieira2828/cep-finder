@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react';
 import { Tabs } from '../../widgets/Tabs';
+import { HomeHeader } from '../../widgets/HomeHeader/HomeHeader';
 import { SearchByCep } from '../../features/search-by-cep/ui/SearchByCep';
 import { SearchByAddress } from '../../features/search-by-address/ui';
 import { RecentAddressSearches, RecentCepSearches } from '../../features/recent-searches/ui';
 
 export function Home() {
     const [activeTab, setActiveTab] = useState('cep');
-    const cepSearchRef = useRef<(cep: string) => void>(() => { });
-    const addressSearchRef = useRef<(uf: string, city: string, street: string) => void>(() => { });
+    const cepSearchRef = useRef<(cep: string) => void>(() => {});
+    const addressSearchRef = useRef<(uf: string, city: string, street: string) => void>(() => {});
 
     const tabs = [
         { id: 'cep', label: 'Buscar por CEP' },
@@ -16,14 +17,8 @@ export function Home() {
 
     return (
         <div className="min-h-screen px-8 py-8 flex flex-col bg-gray-1100">
-            <header className="text-center mb-12">
-                <h1 className="text-blue-500 text-4xl font-bold mb-2">
-                    Busca de Endereços
-                </h1>
-                <p className="text-gray-300 text-lg">
-                    Consulte CEPs e endereços utilizando a API ViaCEP
-                </p>
-            </header>
+
+            <HomeHeader />
 
             <main className="max-w-4xl mx-auto w-full flex-1">
                 <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
