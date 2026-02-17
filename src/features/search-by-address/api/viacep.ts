@@ -14,11 +14,14 @@ export async function searchAddressByLocation(
         throw new Error('Erro ao buscar endereço');
     }
 
+
     const data = await response.json();
 
     if (data.erro || data.length === 0) {
         throw new Error('Nenhum endereço encontrado');
     }
+
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     return data;
 }

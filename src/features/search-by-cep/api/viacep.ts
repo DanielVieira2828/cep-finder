@@ -22,5 +22,7 @@ export async function searchAddressByCep(cep: string): Promise<Address> {
         throw new Error('CEP não encontrado');
     }
 
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     return data;
 }

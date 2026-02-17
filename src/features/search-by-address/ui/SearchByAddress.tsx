@@ -5,6 +5,7 @@ import { AddressDetails } from '../../../shared/ui/AddressDetails';
 import { Modal } from '../../../shared/ui/Modal/Modal';
 import { ErrorMessage } from '../../../shared/ui/ErrorMessage';
 import { AddressCard } from '../../../shared/ui/AddressCard/AddressCard';
+import { SkeletonCard } from '../../../shared/ui/SkeletonCard';
 
 interface SearchByAddressProps {
     onSearchRef?: (searchFn: (uf: string, city: string, street: string) => void) => void;
@@ -74,7 +75,7 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
                 <div className="flex flex-col gap-2">
                     <label htmlFor="street" className="text-gray-300 text-sm font-medium">Logradouro</label>
                     <div className="relative">
-                        {/* Lupa */}
+
                         <svg
                             className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500"
                             width="20" height="20" viewBox="0 0 20 20" fill="none"
@@ -114,25 +115,41 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
 
             <ErrorMessage message={error} onDismiss={reset} />
 
-            {addresses.length > 0 && (
-    <div className="mt-8">
-        <div className="flex justify-between items-center mb-6">
-            <h3 className="text-white text-xl font-semibold">Resultados da busca</h3>
-            <span className="text-gray-400 text-sm">
-                {addresses.length} {addresses.length === 1 ? 'endereço encontrado' : 'endereços encontrados'}
-            </span>
-        </div>
-        <div className="flex flex-col gap-4">
-            {addresses.map((address, index) => (
-                <AddressCard
-                    key={index}
-                    address={address}
-                    onClick={() => setSelectedAddress(address)}
-                />
-            ))}
-        </div>
-    </div>
-)}
+
+            {isLoading && (
+                <div className="mt-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-white text-xl font-semibold">Buscando endereços...</h3>
+                        <div className="w-20 h-4 bg-gray-800 rounded animate-pulse" />
+                    </div>
+                    <div className="flex flex-col gap-4">
+                        <SkeletonCard />
+                        <SkeletonCard />
+                        <SkeletonCard />
+                    </div>
+                </div>
+            )}
+
+            {!isLoading && addresses.length > 0 && (
+                <div className="mt-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-white text-xl font-semibold">Resultados da busca</h3>
+                        <span className="text-gray-400 text-sm">
+                            {addresses.length} {addresses.length === 1 ? 'endereço encontrado' : 'endereços encontrados'}
+                        </span>
+                    </div>
+                    <div className="flex flex-col gap-4">
+                        {addresses.map((address, index) => (
+                            <AddressCard
+                                key={index}
+                                address={address}
+                                onClick={() => setSelectedAddress(address)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <Modal isOpen={!!selectedAddress} onClose={() => setSelectedAddress(null)}>
                 {selectedAddress && (
                     <AddressDetails address={selectedAddress} onClose={() => setSelectedAddress(null)} />

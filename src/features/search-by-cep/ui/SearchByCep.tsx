@@ -6,6 +6,7 @@ import { Modal } from '../../../shared/ui/Modal/Modal';
 import { AddressDetails } from '../../../shared/ui/AddressDetails/AddressDetails';
 import { ErrorMessage } from '../../../shared/ui/ErrorMessage';
 import { AddressCard } from '../../../shared/ui/AddressCard/AddressCard';
+import { SkeletonCard } from '../../../shared/ui/SkeletonCard';
 
 interface SearchByCepProps {
     onSearchRef?: (searchFn: (cep: string) => void) => void;
@@ -49,7 +50,6 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
                 </label>
 
                 <div className="relative">
-                    {/* Lupa */}
                     <svg
                         className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500"
                         width="20" height="20" viewBox="0 0 20 20" fill="none"
@@ -72,13 +72,24 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
                     {isLoading && (
                         <div className="absolute right-4 top-1/2 -translate-y-1/2">
                             <svg
-                                className="animate-spin h-5 w-5 text-blue-400"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                className="animate-spin h-5 w-5 text-blue-500"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
                             >
-                                <circle className="opacity-25" cx="12" cy="12" r="10"
-                                    stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                />
+                                <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
                             </svg>
                         </div>
                     )}
@@ -91,18 +102,28 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
 
             <ErrorMessage message={error} onDismiss={reset} />
 
-           {address && (
-    <div className="mt-8">
-        <div className="flex justify-between items-center mb-6">
-            <h3 className="text-white text-xl font-semibold">Resultados da busca</h3>
-            <span className="text-gray-400 text-sm">1 endereço encontrado</span>
-        </div>
-        <AddressCard
-            address={address}
-            onClick={() => setSelectedAddress(address)}
-        />
-    </div>
-)}
+            {isLoading && (
+                <div className="mt-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-white text-xl font-semibold">Buscando endereço...</h3>
+                        <div className="w-20 h-4 bg-gray-800 rounded animate-pulse" />
+                    </div>
+                    <SkeletonCard />
+                </div>
+            )}
+
+            {!isLoading && address && (
+                <div className="mt-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="text-white text-xl font-semibold">Resultados da busca</h3>
+                        <span className="text-gray-400 text-sm">1 endereço encontrado</span>
+                    </div>
+                    <AddressCard
+                        address={address}
+                        onClick={() => setSelectedAddress(address)}
+                    />
+                </div>
+            )}
 
             <Modal isOpen={!!selectedAddress} onClose={() => setSelectedAddress(null)}>
                 {selectedAddress && (
