@@ -3,7 +3,7 @@ import { useSearchByAddress } from '../model/useSearchByAddress';
 import { Address } from '../../../entities/address/model/types';
 import { AddressDetails } from '../../../shared/ui/AddressDetails';
 import { Modal } from '../../../shared/ui/Modal/Modal';
-import { ErrorMessage } from '../../../shared/ui/ErrorMessage.';
+import { ErrorMessage } from '../../../shared/ui/ErrorMessage';
 import { AddressCard } from '../../../shared/ui/AddressCard/AddressCard';
 
 interface SearchByAddressProps {
