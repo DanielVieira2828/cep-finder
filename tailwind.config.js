@@ -117,7 +117,7 @@ export default {
         red: '#FF453A',
         brown: '#AC8E68',
       },
-      keyframes: {
+       keyframes: {
         shake: {
           '0%, 100%': { transform: 'translateX(0)' },
           '20%':       { transform: 'translateX(-6px)' },
@@ -125,9 +125,19 @@ export default {
           '60%':       { transform: 'translateX(-4px)' },
           '80%':       { transform: 'translateX(4px)' },
         },
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         shake: 'shake 0.5s ease-in-out',
+        fadeIn: 'fadeIn 0.4s ease-out',
+        slideUp: 'slideUp 0.5s ease-out',
       },
     },
   },

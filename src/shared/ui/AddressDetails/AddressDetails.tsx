@@ -18,6 +18,7 @@ import {
     CheckIcon,
 } from "@heroicons/react/24/outline";
 import { Address } from "../../../entities/address/model/types";
+import { Toast } from "../Toast/Toast";
 
 interface AddressDetailsProps {
     address: Address;
@@ -28,11 +29,15 @@ const ICON_CLASS = "text-blue-400";
 
 export function AddressDetails({ address, onClose }: AddressDetailsProps) {
     const [copiedField, setCopiedField] = useState<string | null>(null);
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
 
     const handleCopy = (label: string, value: string) => {
         if (value === "-") return;
         navigator.clipboard.writeText(value).then(() => {
             setCopiedField(label);
+            setToastMessage(`${label} copiado!`);
+            setShowToast(true);
             setTimeout(() => setCopiedField(null), 2000);
         });
     };
@@ -55,7 +60,6 @@ export function AddressDetails({ address, onClose }: AddressDetailsProps) {
 
     return (
         <>
-            {/* Header */}
             <div className="sticky top-0 z-10 bg-gray-1000 border-b border-gray-900 px-6 py-4 flex items-center justify-between">
                 <h2 className="text-white text-xl font-bold">Detalhes do Endereço</h2>
                 <button
@@ -67,7 +71,6 @@ export function AddressDetails({ address, onClose }: AddressDetailsProps) {
                 </button>
             </div>
 
-            {/* Grid */}
             <div className="p-6">
                 <div className="grid grid-cols-4 gap-3">
                     {fields.map(({ label, value, Icon, span }) => {
@@ -86,12 +89,11 @@ export function AddressDetails({ address, onClose }: AddressDetailsProps) {
                                     ${isEmpty
                                         ? "border-gray-800 cursor-default opacity-50"
                                         : isCopied
-                                            ? "border-green-500/60 cursor-pointer"
-                                            : "border-gray-800 cursor-pointer hover:border-blue-600/50"
+                                            ? "border-green-500/60 cursor-pointer shadow-lg shadow-green-500/20"
+                                            : "border-gray-800 cursor-pointer hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-600/10 hover:-translate-y-0.5"
                                     }
                                 `}
                             >
-                                {/* Label + ícone do campo */}
                                 <div className={`flex items-center gap-2 ${isSmall ? "mb-1.5" : "mb-2.5"}`}>
                                     <Icon className={`shrink-0 ${ICON_CLASS} ${isSmall ? "w-4 h-4" : "w-5 h-5"}`} />
                                     <span className={`text-gray-400 font-medium uppercase tracking-wide truncate ${isSmall ? "text-[10px]" : "text-xs"}`}>
@@ -99,7 +101,6 @@ export function AddressDetails({ address, onClose }: AddressDetailsProps) {
                                     </span>
                                 </div>
 
-                                {/* Valor */}
                                 <p
                                     className={`text-white font-semibold truncate ${isSmall ? "text-sm pr-5" : "text-lg pr-8"}`}
                                     title={value}
@@ -107,7 +108,6 @@ export function AddressDetails({ address, onClose }: AddressDetailsProps) {
                                     {value}
                                 </p>
 
-                                {/* Ícone de copiar — canto inferior direito */}
                                 {!isEmpty && (
                                     <div className={`
                                         absolute transition-all duration-300
@@ -126,7 +126,6 @@ export function AddressDetails({ address, onClose }: AddressDetailsProps) {
                 </div>
             </div>
 
-            {/* Footer */}
             <div className="sticky bottom-0 bg-gray-1000 border-t border-gray-900 px-6 py-4">
                 <button
                     onClick={onClose}
@@ -136,6 +135,12 @@ export function AddressDetails({ address, onClose }: AddressDetailsProps) {
                     Fechar
                 </button>
             </div>
+
+            <Toast 
+                message={toastMessage} 
+                isVisible={showToast} 
+                onHide={() => setShowToast(false)} 
+            />
         </>
     );
 }

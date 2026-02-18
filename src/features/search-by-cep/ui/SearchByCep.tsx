@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchByCep } from '../model/useSearchByCep';
 import { useDebounce } from '../../../shared/hooks';
 import { Address } from '../../../entities/address/model/types';
 import { Modal } from '../../../shared/ui/Modal/Modal';
 import { AddressDetails } from '../../../shared/ui/AddressDetails/AddressDetails';
-import { ErrorMessage } from '../../../shared/ui/ErrorMessage';
+import { ErrorMessage } from '../../../shared/ui/ErrorMessage/ErrorMessage';
 import { AddressCard } from '../../../shared/ui/AddressCard/AddressCard';
 import { SkeletonCard } from '../../../shared/ui/SkeletonCard';
+import { EmptyState } from '../../../shared/ui/EmptyState/EmptyState';
 
 interface SearchByCepProps {
     onSearchRef?: (searchFn: (cep: string) => void) => void;
@@ -17,15 +18,24 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
     const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
     const debouncedCep = useDebounce(cep, 800);
     const { address, isLoading, error, search, reset } = useSearchByCep();
+    
+
+    const isManualSearch = useRef(false);
+
+    const handleSearch = useCallback((newCep: string) => {
+        setCep(newCep);
+        const cleanCep = newCep.replace(/\D/g, '');
+        if (cleanCep.length === 8) {
+            isManualSearch.current = true; 
+            search(newCep);
+        }
+    }, [search]);
 
     useEffect(() => {
         if (onSearchRef) {
-            onSearchRef((newCep: string) => {
-                setCep(newCep);
-                search(newCep);
-            });
+            onSearchRef(handleSearch);
         }
-    }, [onSearchRef, search]);
+    }, [onSearchRef, handleSearch]);
 
     const formatCep = (value: string) => {
         const cleaned = value.replace(/\D/g, '');
@@ -35,12 +45,25 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
 
     const handleCepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setCep(formatCep(e.target.value));
+        isManualSearch.current = false; 
     };
 
+
     useEffect(() => {
+        if (isManualSearch.current) {
+            isManualSearch.current = false; 
+            return; 
+        }
+
         const cleanCep = debouncedCep.replace(/\D/g, '');
-        if (cleanCep.length === 8) search(debouncedCep);
+        if (cleanCep.length === 8) {
+            search(debouncedCep);
+        }
+      
     }, [debouncedCep]);
+
+    const isCepNotFound = error?.toLowerCase().includes('não encontrado');
+    const shouldShowError = error && !isCepNotFound;
 
     return (
         <div className="w-full">
@@ -72,7 +95,7 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
                     {isLoading && (
                         <div className="absolute right-4 top-1/2 -translate-y-1/2">
                             <svg
-                                className="animate-spin h-5 w-5 text-blue-500"
+                                className="animate-spin h-5 w-5 text-blue-400"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
                                 viewBox="0 0 24 24"
@@ -100,13 +123,13 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
                 </p>
             </div>
 
-            <ErrorMessage message={error} onDismiss={reset} />
+            {shouldShowError && <ErrorMessage message={error} onDismiss={reset} />}
 
             {isLoading && (
                 <div className="mt-8">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-white text-xl font-semibold">Buscando endereço...</h3>
-                        <div className="w-20 h-4 bg-gray-800 rounded animate-pulse" />
+                        <div className="h-6 w-40 bg-gray-800 rounded animate-pulse" />
+                        <div className="h-4 w-32 bg-gray-800 rounded animate-pulse" />
                     </div>
                     <SkeletonCard />
                 </div>
@@ -114,15 +137,27 @@ export function SearchByCep({ onSearchRef }: SearchByCepProps) {
 
             {!isLoading && address && (
                 <div className="mt-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-white text-xl font-semibold">Resultados da busca</h3>
-                        <span className="text-gray-400 text-sm">1 endereço encontrado</span>
+                    <div className="flex justify-between items-center mb-6 animate-fadeIn">
+                        <h3 className="text-white text-xl font-bold">Resultados da busca</h3>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-950 border border-blue-900 rounded-lg">
+                            <span className="text-blue-400 text-2xl font-bold tabular-nums">1</span>
+                            <span className="text-gray-400 text-xs font-medium">endereço encontrado</span>
+                        </div>
                     </div>
                     <AddressCard
                         address={address}
                         onClick={() => setSelectedAddress(address)}
+                        animationDelay={0}
                     />
                 </div>
+            )}
+
+            {!isLoading && isCepNotFound && (
+                <EmptyState
+                    title="CEP não encontrado"
+                    description="Verifique se o CEP digitado está correto e tente novamente."
+                    icon="location"
+                />
             )}
 
             <Modal isOpen={!!selectedAddress} onClose={() => setSelectedAddress(null)}>

@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchByAddress } from '../model/useSearchByAddress';
 import { Address } from '../../../entities/address/model/types';
 import { AddressDetails } from '../../../shared/ui/AddressDetails';
 import { Modal } from '../../../shared/ui/Modal/Modal';
-import { ErrorMessage } from '../../../shared/ui/ErrorMessage';
+import { ErrorMessage } from '../../../shared/ui/ErrorMessage/ErrorMessage';
 import { AddressCard } from '../../../shared/ui/AddressCard/AddressCard';
 import { SkeletonCard } from '../../../shared/ui/SkeletonCard';
+import { EmptyState } from '../../../shared/ui/EmptyState/EmptyState';
 
 interface SearchByAddressProps {
     onSearchRef?: (searchFn: (uf: string, city: string, street: string) => void) => void;
@@ -17,22 +18,33 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
     const [street, setStreet] = useState('');
     const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
     const { addresses, isLoading, error, search, reset } = useSearchByAddress();
+    
+    // Flag para evitar busca duplicada quando clica no histórico
+    const isManualSearch = useRef(false);
+
+    const handleSearch = useCallback((newUf: string, newCity: string, newStreet: string) => {
+        setUf(newUf);
+        setCity(newCity);
+        setStreet(newStreet);
+        isManualSearch.current = true; // Marca como busca manual
+        search(newUf, newCity, newStreet);
+    }, [search]);
 
     useEffect(() => {
         if (onSearchRef) {
-            onSearchRef((newUf, newCity, newStreet) => {
-                setUf(newUf);
-                setCity(newCity);
-                setStreet(newStreet);
-                search(newUf, newCity, newStreet);
-            });
+            onSearchRef(handleSearch);
         }
-    }, [onSearchRef, search]);
+    }, [onSearchRef, handleSearch]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        isManualSearch.current = false; // Form submit não precisa da flag
         search(uf, city, street);
     };
+
+    const isNotFound = error?.toLowerCase().includes('não encontrado') || 
+                       error?.toLowerCase().includes('nenhum endereço');
+    const shouldShowError = error && !isNotFound;
 
     return (
         <div className="w-full">
@@ -48,7 +60,10 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
                             id="uf"
                             type="text"
                             value={uf}
-                            onChange={(e) => setUf(e.target.value.toUpperCase())}
+                            onChange={(e) => {
+                                setUf(e.target.value.toUpperCase());
+                                isManualSearch.current = false;
+                            }}
                             placeholder="SP"
                             maxLength={2}
                             className="px-4 py-3.5 bg-gray-900 border border-gray-800 rounded-xl text-white 
@@ -63,7 +78,10 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
                             id="city"
                             type="text"
                             value={city}
-                            onChange={(e) => setCity(e.target.value)}
+                            onChange={(e) => {
+                                setCity(e.target.value);
+                                isManualSearch.current = false;
+                            }}
                             placeholder="São Paulo"
                             className="px-4 py-3.5 bg-gray-900 border border-gray-800 rounded-xl text-white 
                                        focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/20 
@@ -75,7 +93,6 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
                 <div className="flex flex-col gap-2">
                     <label htmlFor="street" className="text-gray-300 text-sm font-medium">Logradouro</label>
                     <div className="relative">
-
                         <svg
                             className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500"
                             width="20" height="20" viewBox="0 0 20 20" fill="none"
@@ -89,7 +106,10 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
                             id="street"
                             type="text"
                             value={street}
-                            onChange={(e) => setStreet(e.target.value)}
+                            onChange={(e) => {
+                                setStreet(e.target.value);
+                                isManualSearch.current = false;
+                            }}
                             placeholder="Rua Cedral"
                             className="w-full pl-12 pr-4 py-3.5 bg-gray-900 border border-gray-800 rounded-xl text-white 
                                        focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/20 
@@ -113,14 +133,13 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
                 </p>
             </form>
 
-            <ErrorMessage message={error} onDismiss={reset} />
-
+            {shouldShowError && <ErrorMessage message={error} onDismiss={reset} />}
 
             {isLoading && (
                 <div className="mt-8">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-white text-xl font-semibold">Buscando endereços...</h3>
-                        <div className="w-20 h-4 bg-gray-800 rounded animate-pulse" />
+                        <div className="h-6 w-40 bg-gray-800 rounded animate-pulse" />
+                        <div className="h-4 w-32 bg-gray-800 rounded animate-pulse" />
                     </div>
                     <div className="flex flex-col gap-4">
                         <SkeletonCard />
@@ -132,11 +151,14 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
 
             {!isLoading && addresses.length > 0 && (
                 <div className="mt-8">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-white text-xl font-semibold">Resultados da busca</h3>
-                        <span className="text-gray-400 text-sm">
-                            {addresses.length} {addresses.length === 1 ? 'endereço encontrado' : 'endereços encontrados'}
-                        </span>
+                    <div className="flex justify-between items-center mb-6 animate-fadeIn">
+                        <h3 className="text-white text-xl font-bold">Resultados da busca</h3>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-950 border border-blue-900 rounded-lg">
+                            <span className="text-blue-400 text-2xl font-bold tabular-nums">{addresses.length}</span>
+                            <span className="text-gray-400 text-xs font-medium">
+                                {addresses.length === 1 ? 'endereço' : 'endereços'}
+                            </span>
+                        </div>
                     </div>
                     <div className="flex flex-col gap-4">
                         {addresses.map((address, index) => (
@@ -144,10 +166,19 @@ export function SearchByAddress({ onSearchRef }: SearchByAddressProps) {
                                 key={index}
                                 address={address}
                                 onClick={() => setSelectedAddress(address)}
+                                animationDelay={index * 100}
                             />
                         ))}
                     </div>
                 </div>
+            )}
+
+            {!isLoading && isNotFound && (
+                <EmptyState
+                    title="Nenhum endereço encontrado"
+                    description="Tente ajustar os filtros de busca ou verifique a ortografia dos campos."
+                    icon="search"
+                />
             )}
 
             <Modal isOpen={!!selectedAddress} onClose={() => setSelectedAddress(null)}>
